@@ -1,5 +1,9 @@
 package com.github.danfickle.javasqlquerybuilder;
 
+import com.github.danfickle.javasqlquerybuilder.tool.Tuple;
+
+import java.util.List;
+
 /**
  * Parent interface for a select, update, insert or delete query.
  * QbQuery child interfaces should be created using a DB
@@ -22,4 +26,7 @@ public interface QbQuery
 	 * PreparedStatement::set* functions.
 	 */
 	public int getPlaceholderIndex(String placeholderName);
+
+	public int exec(List<Tuple<String, Object>> args);
+
 }

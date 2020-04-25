@@ -7,11 +7,19 @@ import com.github.danfickle.javasqlquerybuilder.QbInsert;
 import com.github.danfickle.javasqlquerybuilder.QbQuery;
 import com.github.danfickle.javasqlquerybuilder.QbSelect;
 import com.github.danfickle.javasqlquerybuilder.QbUpdate;
+import lombok.Getter;
+import lombok.RequiredArgsConstructor;
 
+import java.sql.Connection;
+
+@RequiredArgsConstructor
 public class QbFactoryImp implements QbFactory
 {
 	private static QbField m_allField = new QbAllFieldImp();
-	
+
+	@Getter
+	private final Connection connection;
+
 	@Override
 	public QbField newAllField()
 	{
@@ -75,30 +83,30 @@ public class QbFactoryImp implements QbFactory
 	@Override
 	public QbSelect newSelectQuery()
 	{
-		return new QbSelectImp();
+		return new QbSelectImp(this.connection);
 	}
 
 	@Override
 	public QbUpdate newUpdateQuery()
 	{
-		return new QbUpdateImp();
+		return new QbUpdateImp(this.connection);
 	}
 
 	@Override
 	public QbDelete newDeleteQuery()
 	{
-		return new QbDeleteImp();
+		return new QbDeleteImp(this.connection);
 	}
 
 	@Override
 	public QbInsert newInsertQuery()
 	{
-		return new QbInsertImp();
+		return new QbInsertImp(this.connection);
 	}
 
 	@Override
 	public QbQuery newQuery(String sql)
 	{
-		return new QbCustomQuery(sql);
+		return new QbCustomQuery(sql, this.connection);
 	}
 }

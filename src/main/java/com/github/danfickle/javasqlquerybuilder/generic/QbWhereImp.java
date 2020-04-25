@@ -1,12 +1,12 @@
 package com.github.danfickle.javasqlquerybuilder.generic;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import com.github.danfickle.javasqlquerybuilder.QbField;
 import com.github.danfickle.javasqlquerybuilder.QbWhere;
+import com.github.danfickle.javasqlquerybuilder.tool.Tuple;
+import com.google.common.collect.Lists;
+import lombok.Getter;
 
 class QbWhereImp implements QbWhere
 {
@@ -43,6 +43,9 @@ class QbWhereImp implements QbWhere
 	private Map<String, Integer> m_placeholders = new HashMap<String, Integer>();
 	private int m_placeholderCnt = 1;
 
+	@Getter
+	public final List<Tuple<String, Object>> paramsList = Lists.newArrayList();
+
 	@Override
 	public String toString()
 	{
@@ -51,6 +54,7 @@ class QbWhereImp implements QbWhere
 		int fieldCnt = 0;
 		for (WhereInfo whereInfo : m_whereInfo)
 		{
+
 			if (whereInfo.m_startBracket)
 			{
 				builder.append('(');
@@ -88,7 +92,13 @@ class QbWhereImp implements QbWhere
 			
 			builder.append(' ');
 			builder.append(whereInfo.m_op.toString());
-			builder.append(" ?");
+
+			Optional<Tuple<String, Object>> tupleOptional = paramsList
+					.stream()
+					.filter(t->t.getA().equals(":"+whereInfo.m_field.toString().replace("`", "")))
+					.findAny();
+
+			builder.append(" '"+ (tupleOptional.isPresent() ? tupleOptional.get().getB() : "?") +"'");
 		}
 		
 		return builder.toString();
@@ -97,43 +107,46 @@ class QbWhereImp implements QbWhere
 	
 	
 	@Override
-	public QbWhere where(QbField field, String placeholder)
+	public QbWhere where(String field, Object val)
 	{
-		WhereInfo whereInfo = new WhereInfo(field, QbWhereOperator.EQUALS);
+		WhereInfo whereInfo = new WhereInfo(new QbStdFieldImp(field), QbWhereOperator.EQUALS);
 		m_whereInfo.add(whereInfo);
-		m_placeholders.put(placeholder, m_placeholderCnt);
+		m_placeholders.put(":" + field, m_placeholderCnt);
+		paramsList.add(new Tuple<>(":" + field, val));
 		m_placeholderCnt++;
 		return this;
 	}
 
 	@Override
-	public QbWhere where(QbField field, QbWhereOperator op, String placeholder)
+	public QbWhere where(String field, QbWhereOperator op, Object val)
 	{
-		WhereInfo whereInfo = new WhereInfo(field, op);
+		WhereInfo whereInfo = new WhereInfo(new QbStdFieldImp(field), op);
 		m_whereInfo.add(whereInfo);
-		m_placeholders.put(placeholder, m_placeholderCnt);
+		m_placeholders.put(":" + field, m_placeholderCnt);
+		paramsList.add(new Tuple<>(":" + field, val));
 		m_placeholderCnt++;
 		return this;
 	}
 
 	@Override
-	public QbWhere orWhere(QbField field, String placeholder)
+	public QbWhere orWhere(String field, Object val)
 	{
-		WhereInfo whereInfo = new WhereInfo(field, QbWhereOperator.EQUALS);
+		WhereInfo whereInfo = new WhereInfo(new QbStdFieldImp(field), QbWhereOperator.EQUALS);
 		whereInfo.m_orClause = true;
 		m_whereInfo.add(whereInfo);
-		m_placeholders.put(placeholder, m_placeholderCnt);
+		m_placeholders.put(":" + field, m_placeholderCnt);
+		paramsList.add(new Tuple<>(":" + field, val));
 		m_placeholderCnt++;
 		return this;
 	}
-
 	@Override
-	public QbWhere orWhere(QbField field, QbWhereOperator op, String placeholder)
+	public QbWhere orWhere(String field, QbWhereOperator op, Object val)
 	{
-		WhereInfo whereInfo = new WhereInfo(field, op);
+		WhereInfo whereInfo = new WhereInfo(new QbStdFieldImp(field), op);
 		whereInfo.m_orClause = true;
 		m_whereInfo.add(whereInfo);
-		m_placeholders.put(placeholder, m_placeholderCnt);
+		m_placeholders.put(":" + field, m_placeholderCnt);
+		paramsList.add(new Tuple<>(":" + field, val));
 		m_placeholderCnt++;
 		return this;
 	}
